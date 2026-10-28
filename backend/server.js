@@ -10,7 +10,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://joshvin225769-cloud.github.io'],
+  origin: ['http://localhost:5173', 'https://joshvin225769-cloud.github.io', '*'],
   credentials: true
 }));
 app.use(express.json());
