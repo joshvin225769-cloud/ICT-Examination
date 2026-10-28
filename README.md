@@ -1,37 +1,69 @@
-# Assignment 3: Employee App Backend Integration
+# Job Application Tracker
 
-Express and MongoDB backend for the supplied Employee App frontend. All backend code is in `app.js`. Existing starter code and all files in `dist` are preserved.
+A MERN stack web application for job seekers to track job applications through different stages.
 
-## Setup
+## Features
 
-1. Run `npm install`.
-2. Copy `.env.example` to `.env`.
-3. Create an Atlas database user and allow your development machine's IP in Atlas Network Access.
-4. Set `MONGODB_URI` in `.env` to your Atlas connection string, including database name. URL-encode special characters in the password.
-5. Run `npm start` and open http://localhost:3000.
+- Add job applications with company name, job role, job type, applied date, expected salary, and notes
+- Auto-generated Application ID (JA-XXX-### format)
+- Status workflow with valid transitions
+- Status history timeline
+- Auto follow-up date (7 days after applied date) with overdue badge
+- Duplicate prevention for active applications
+- Filter by status and search by company
+- Edit applications (except ID and applied date)
+- Delete applications with rules (only Applied or final status, not Interview/Offer)
 
-The server connects to MongoDB before accepting requests. Keep `.env` out of Git.
+## Tech Stack
 
-## API
+- **Frontend**: React.js, React Router, Axios
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB with Mongoose
 
-| Method | Endpoint | Action |
-| --- | --- | --- |
-| GET | `/api/employeelist` | List all employees |
-| GET | `/api/employeelist/:id` | Get one employee |
-| POST | `/api/employeelist` | Add employee |
-| PUT | `/api/employeelist` | Update employee using `_id` in body (frontend contract) |
-| PUT | `/api/employeelist/:id` | Update employee using URL ID |
-| DELETE | `/api/employeelist/:id` | Delete employee |
+## Project Structure
 
-POST and PUT accept `name`, `position`, `location`, and `salary`. PUT to the collection endpoint also requires `_id`. Text fields must be nonempty and salary must be non-negative. Responses are JSON; invalid inputs return 400, missing employees return 404, and database failures return 500.
-
-```json
-{
-  "name": "Alex Thomas",
-  "position": "Developer",
-  "location": "Kochi",
-  "salary": 45000
-}
+```
+project-root/
+├── frontend/
+└── backend/
 ```
 
-Run `npm run check` for a JavaScript syntax check. The supplied frontend is served directly by Express and needs no build step.
+## Setup Instructions
+
+### Backend
+
+1. Navigate to backend directory: `cd backend`
+2. Install dependencies: `npm install`
+3. Create `.env` file based on `.env.example` and add your MongoDB URI
+4. Start the server: `npm run dev` (runs on port 5000)
+
+### Frontend
+
+1. Navigate to frontend directory: `cd frontend`
+2. Install dependencies: `npm install`
+3. Start the development server: `npm run dev` (runs on port 5173)
+
+## APIs Created
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/applications` | Get all applications with filters (status, search) and counts |
+| GET | `/api/applications/:id` | Get a single application by ID |
+| POST | `/api/applications` | Create a new application |
+| PUT | `/api/applications/:id/status` | Update application status |
+| PUT | `/api/applications/:id` | Update application details |
+| DELETE | `/api/applications/:id` | Delete an application |
+
+## Screenshots
+
+![Home Page](screenshots/home.png)
+![Add Application](screenshots/add-application.png)
+![Application Details](screenshots/application-detail.png)
+
+## Environment Variables
+
+Create a `.env` file in the backend directory with:
+```
+MONGODB_URI=your_mongodb_atlas_connection_string
+PORT=5000
+```
