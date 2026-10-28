@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/applications';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/applications';
 
 export const getAllApplications = (params = {}) => {
   return axios.get(API_URL, { params });
@@ -25,3 +25,4 @@ export const updateStatus = (id, status) => {
 export const deleteApplication = (id) => {
   return axios.delete(`${API_URL}/${id}`);
 };
+
