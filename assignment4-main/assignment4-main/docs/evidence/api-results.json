@@ -1,0 +1,23 @@
+{
+  "runAt": "2026-10-26T17:10:37.126Z",
+  "environment": "Local isolated MongoDB 8.2.6; Express HTTP integration",
+  "passed": 16,
+  "checks": [
+    "Registration creates student, hashes password, and issues HttpOnly SameSite cookie",
+    "Registration rejects invalid input, duplicate email, and public admin escalation",
+    "Login rejects bad credentials and logout invalidates browser session",
+    "Protected endpoints reject missing and malformed sessions",
+    "Create, read, edit, comment, and delete persist through MongoDB",
+    "Student ownership is enforced for lists, details, edits, comments, deletes, and stats",
+    "Only administrators can update resolution; changes appear in activity history",
+    "Non-open requests cannot be edited or deleted; admin cannot rewrite original report",
+    "Search, combined filters, and pagination return bounded consistent results",
+    "Validation rejects malformed IDs, query operators, invalid enums, and oversized pages",
+    "Missing resources return 404 and empty comments return 400",
+    "Origin protection blocks cross-site mutations but accepts the configured UI origin",
+    "Errors are safe JSON, health checks database readiness, and responses are not cached",
+    "Sensitive authentication endpoints are rate limited",
+    "Production cookies are Secure and the frontend receives security headers",
+    "Activity growth is bounded with a recoverable conflict response"
+  ]
+}

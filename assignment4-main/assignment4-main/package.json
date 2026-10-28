@@ -1,0 +1,20 @@
+{
+  "name": "campusdesk",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["client", "server"],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm start -w server",
+    "test": "npm test -w server",
+    "test:browser": "node scripts/browser-check.mjs",
+    "report": "python scripts/generate_report.py"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "concurrently": "^9.2.0",
+    "playwright": "^1.56.0"
+  },
+  "engines": { "node": ">=22" }
+}

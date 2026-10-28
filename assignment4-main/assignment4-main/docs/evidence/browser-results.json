@@ -1,0 +1,159 @@
+{
+  "runAt": "2026-10-26T17:27:22.383Z",
+  "durationSeconds": 47,
+  "environment": "Local Chromium with production Vite build, Express, isolated MongoDB 8.2.6, synthetic users",
+  "passed": 15,
+  "checks": [
+    "Sign-in inline validation rejects empty input.",
+    "Student registration creates a signed-in account with an empty scoped dashboard.",
+    "Sign-in loads persisted student requests and counts.",
+    "Pagination loads the next and previous result pages.",
+    "Status filtering and no-match search produce correct result/empty states.",
+    "A simulated API outage shows retry; retry restores real database results.",
+    "Create validates inputs, saves to MongoDB, and opens the new request.",
+    "Comment and edit update the request and preserve activity history.",
+    "Confirmed deletion removes an open request from MongoDB.",
+    "Refreshing a deep link returns the application and persisted request.",
+    "Administrator changes status and posts an update through the browser.",
+    "Student sees administrator updates and cannot edit a non-open request.",
+    "Dashboard, list, and form work at 390px without horizontal overflow.",
+    "No uncaught JavaScript errors during the complete browser journey.",
+    "Major desktop/mobile screens pass automated serious/critical WCAG A/AA checks."
+  ],
+  "screenshots": [
+    {
+      "file": "01-sign-in.png",
+      "caption": "Sign-in screen with secure student and administrator access.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "02-registration.png",
+      "caption": "Student self-registration; administrators cannot register publicly.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "03-empty-dashboard.png",
+      "caption": "New account dashboard with a clear empty-state next step.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "04-student-dashboard.png",
+      "caption": "Student overview: request counts, recent requests, and category distribution.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "05-request-list.png",
+      "caption": "Searchable request list with filters, priorities, statuses, and pagination.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "06-retry-state.png",
+      "caption": "Simulated API outage demonstrates an explicit error state and retry action.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "07-new-request.png",
+      "caption": "New request form with category, location, description, and urgency.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "08-request-detail.png",
+      "caption": "Request detail showing progress stages, metadata, and activity conversation.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "09-admin-dashboard.png",
+      "caption": "Administrator overview with campus-wide visibility.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "10-admin-resolution.png",
+      "caption": "Administrator resolution controls and a recorded status/comment update.",
+      "width": 1440,
+      "mobile": false
+    },
+    {
+      "file": "11-mobile-dashboard.png",
+      "caption": "390px mobile dashboard with stacked cards and compact navigation.",
+      "width": 390,
+      "mobile": true
+    },
+    {
+      "file": "12-mobile-requests.png",
+      "caption": "Mobile request list switches from a table to readable request cards.",
+      "width": 390,
+      "mobile": true
+    },
+    {
+      "file": "13-mobile-form.png",
+      "caption": "Mobile request form with stacked labelled inputs.",
+      "width": 390,
+      "mobile": true
+    }
+  ],
+  "accessibility": [
+    {
+      "screen": "01-sign-in.png",
+      "violations": []
+    },
+    {
+      "screen": "02-registration.png",
+      "violations": []
+    },
+    {
+      "screen": "03-empty-dashboard.png",
+      "violations": []
+    },
+    {
+      "screen": "04-student-dashboard.png",
+      "violations": []
+    },
+    {
+      "screen": "05-request-list.png",
+      "violations": []
+    },
+    {
+      "screen": "06-retry-state.png",
+      "violations": []
+    },
+    {
+      "screen": "07-new-request.png",
+      "violations": []
+    },
+    {
+      "screen": "08-request-detail.png",
+      "violations": []
+    },
+    {
+      "screen": "09-admin-dashboard.png",
+      "violations": []
+    },
+    {
+      "screen": "10-admin-resolution.png",
+      "violations": []
+    },
+    {
+      "screen": "11-mobile-dashboard.png",
+      "violations": []
+    },
+    {
+      "screen": "12-mobile-requests.png",
+      "violations": []
+    },
+    {
+      "screen": "13-mobile-form.png",
+      "violations": []
+    }
+  ],
+  "pageErrors": [],
+  "liveDeploymentTested": false
+}
