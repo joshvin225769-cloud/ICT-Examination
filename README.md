@@ -1,69 +1,87 @@
-# Job Application Tracker
+# ApplyTrack - Job Application Management System
 
-A MERN stack web application for job seekers to track job applications through different stages.
+A full-stack solution built with the MERN stack to help job seekers organize and monitor their employment applications from submission to final decision.
 
-## Features
+## Project Overview
 
-- Add job applications with company name, job role, job type, applied date, expected salary, and notes
-- Auto-generated Application ID (JA-XXX-### format)
-- Status workflow with valid transitions
-- Status history timeline
-- Auto follow-up date (7 days after applied date) with overdue badge
-- Duplicate prevention for active applications
-- Filter by status and search by company
-- Edit applications (except ID and applied date)
-- Delete applications with rules (only Applied or final status, not Interview/Offer)
+ApplyTrack provides a centralized platform where users can maintain records of all their job applications, track progress through different hiring stages, and stay on top of follow-ups. The system enforces business rules on both client and server sides to ensure data integrity.
 
-## Tech Stack
+## Core Capabilities
 
-- **Frontend**: React.js, React Router, Axios
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB with Mongoose
+- **Application Logging**: Capture essential details including company information, role specifications, employment type, application timeline, compensation expectations, and personal notes
+- **Intelligent ID Generation**: System-generated identifiers following the pattern `JA-XXX-###` with company-specific sequential numbering
+- **Workflow Management**: Enforced status transitions mirroring real hiring processes (Applied → Interview → Offer → Accepted/Declined, with Rejection possible at any active stage)
+- **Activity Tracking**: Complete audit trail of all status changes with precise timestamps
+- **Follow-up Intelligence**: Automated 7-day follow-up calculation with visual indicators for overdue applications
+- **Smart Filtering**: Query applications by status or perform case-insensitive company searches
+- **Data Validation**: Prevents duplicate active applications for the same company-role combination
+- **Controlled Operations**: Edit restrictions, deletion safeguards based on application state
 
-## Project Structure
+## Technology Stack
+
+- **Client Side**: React 18, React Router DOM, Axios
+- **Server Side**: Node.js, Express.js
+- **Data Layer**: MongoDB Atlas, Mongoose ODM
+- **Styling**: Custom CSS3 with responsive design principles
+
+## Repository Layout
 
 ```
 project-root/
-├── frontend/
-└── backend/
+├── frontend/          # React application
+├── backend/           # Express API server
+├── screenshots/       # Application screenshots
+└── README.md
 ```
 
-## Setup Instructions
+## Getting Started
 
-### Backend
+### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB Atlas account or local MongoDB instance
+- npm or yarn package manager
 
-1. Navigate to backend directory: `cd backend`
-2. Install dependencies: `npm install`
-3. Create `.env` file based on `.env.example` and add your MongoDB URI
-4. Start the server: `npm run dev` (runs on port 5000)
-
-### Frontend
-
-1. Navigate to frontend directory: `cd frontend`
-2. Install dependencies: `npm install`
-3. Start the development server: `npm run dev` (runs on port 5173)
-
-## APIs Created
-
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/api/applications` | Get all applications with filters (status, search) and counts |
-| GET | `/api/applications/:id` | Get a single application by ID |
-| POST | `/api/applications` | Create a new application |
-| PUT | `/api/applications/:id/status` | Update application status |
-| PUT | `/api/applications/:id` | Update application details |
-| DELETE | `/api/applications/:id` | Delete an application |
-
-## Screenshots
-
-![Home Page](screenshots/home.png)
-![Add Application](screenshots/add-application.png)
-![Application Details](screenshots/application-detail.png)
-
-## Environment Variables
-
-Create a `.env` file in the backend directory with:
+### Backend Setup
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Update .env with your MongoDB connection string
+npm run dev
 ```
-MONGODB_URI=your_mongodb_atlas_connection_string
+Server will run on `http://localhost:5000`
+
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Client will run on `http://localhost:5173`
+
+## REST API Endpoints
+
+| HTTP Method | Route | Purpose |
+|-------------|-------|---------|
+| `GET` | `/api/applications` | Retrieve all applications with optional status filter and company search. Returns aggregated status counts. |
+| `GET` | `/api/applications/:id` | Fetch detailed information for a specific application including full status history. |
+| `POST` | `/api/applications` | Submit a new job application. Validates dates, checks for duplicates, generates ID and sets follow-up date. |
+| `PUT` | `/api/applications/:id/status` | Transition application status. Only valid transitions are permitted. |
+| `PUT` | `/api/applications/:id` | Modify application details (Company, Role, Job Type, Salary, Notes). ID and Applied Date remain immutable. |
+| `DELETE` | `/api/applications/:id` | Remove application. Restricted to 'Applied' or terminal states only. |
+
+## Configuration
+
+Add the following to `backend/.env`:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
 PORT=5000
 ```
+
+## Visual Documentation
+
+![Main Dashboard](screenshots/home.png)
+![New Application Form](screenshots/add-application.png)
+![Application Details View](screenshots/application-detail.png)
+

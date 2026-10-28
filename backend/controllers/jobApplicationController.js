@@ -1,6 +1,6 @@
 import JobApplication from '../models/JobApplication.js';
 
-const VALID_TRANSITIONS = {
+const allowedTransitions = {
   'Applied': ['Interview', 'Rejected'],
   'Interview': ['Offer', 'Rejected'],
   'Offer': ['Accepted', 'Declined'],
@@ -9,31 +9,37 @@ const VALID_TRANSITIONS = {
   'Declined': []
 };
 
-const FINAL_STATUSES = ['Rejected', 'Accepted', 'Declined'];
+const terminalStates = ['Rejected', 'Accepted', 'Declined'];
+
+const buildOverdueFlag = (app) => {
+  const appObj = app.toObject ? app.toObject() : app;
+  if (app.status === 'Applied') {
+    const now = new Date();
+    const followUp = new Date(app.followUpDate);
+    appObj.isOverdue = now > followUp;
+  } else {
+    appObj.isOverdue = false;
+  }
+  return appObj;
+};
 
 export const getAllApplications = async (req, res) => {
   try {
     const { status, search } = req.query;
-    let query = {};
+    const filter = {};
     
     if (status) {
-      query.status = status;
+      filter.status = status;
     }
     
     if (search) {
-      query.companyName = { $regex: search, $options: 'i' };
+      filter.companyName = { $regex: search, $options: 'i' };
     }
     
-    const applications = await JobApplication.find(query).sort({ createdAt: -1 });
+    const applications = await JobApplication.find(filter).sort({ createdAt: -1 });
     
-    // Calculate counts per status
-    const statusCounts = await JobApplication.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
+    const statusAgg = await JobApplication.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
     
     const counts = {
@@ -46,34 +52,21 @@ export const getAllApplications = async (req, res) => {
       Declined: 0
     };
     
-    statusCounts.forEach(item => {
+    statusAgg.forEach(item => {
       counts[item._id] = item.count;
     });
     
-    const applicationsWithOverdue = applications.map(app => {
-      const appObj = app.toObject();
-      if (app.status === 'Applied') {
-        const now = new Date();
-        const followUp = new Date(app.followUpDate);
-        appObj.isOverdue = now > followUp;
-      } else {
-        appObj.isOverdue = false;
-      }
-      return appObj;
-    });
+    const enriched = applications.map(buildOverdueFlag);
     
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Applications fetched successfully',
-      data: {
-        applications: applicationsWithOverdue,
-        counts
-      }
+      data: { applications: enriched, counts }
     });
-  } catch (error) {
-    res.status(500).json({
+  } catch (err) {
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
       data: null
     });
   }
@@ -90,62 +83,55 @@ export const getApplicationById = async (req, res) => {
       });
     }
     
-    const appObj = application.toObject();
-    if (application.status === 'Applied') {
-      const now = new Date();
-      const followUp = new Date(application.followUpDate);
-      appObj.isOverdue = now > followUp;
-    } else {
-      appObj.isOverdue = false;
-    }
-    
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Application fetched successfully',
-      data: appObj
+      data: buildOverdueFlag(application)
     });
-  } catch (error) {
-    res.status(500).json({
+  } catch (err) {
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
       data: null
     });
   }
 };
 
-const generateApplicationId = async (companyName) => {
-  const prefix = companyName.trim().substring(0, 3).toUpperCase();
-  // Find the highest sequence number for this prefix
-  const regex = new RegExp(`^JA-${prefix}-\\d{3}$`);
-  const existingApps = await JobApplication.find({ applicationId: regex });
+const assignApplicationId = async (company) => {
+  const prefix = company.trim().substring(0, 3).toUpperCase();
+  const pattern = new RegExp(`^JA-${prefix}-\\d{3}$`);
+  const matches = await JobApplication.find({ applicationId: pattern });
   
-  let maxSequence = 0;
-  existingApps.forEach(app => {
-    const parts = app.applicationId.split('-');
+  let max = 0;
+  matches.forEach(m => {
+    const parts = m.applicationId.split('-');
     if (parts.length === 3) {
-      const seq = parseInt(parts[2]);
-      if (!isNaN(seq) && seq > maxSequence) {
-        maxSequence = seq;
-      }
+      const num = parseInt(parts[2]);
+      if (!isNaN(num) && num > max) max = num;
     }
   });
   
-  const nextSequence = String(maxSequence + 1).padStart(3, '0');
-  return `JA-${prefix}-${nextSequence}`;
+  return `JA-${prefix}-${String(max + 1).padStart(3, '0')}`;
 };
 
 export const createApplication = async (req, res) => {
   try {
     const { companyName, jobRole, jobType, appliedDate, expectedSalary, notes } = req.body;
     
-    // Frontend and backend validation for appliedDate not in future
-    const appliedDateObj = new Date(appliedDate);
-    const now = new Date();
-    // Reset time to compare dates only
-    const appliedDateOnly = new Date(appliedDateObj.getFullYear(), appliedDateObj.getMonth(), appliedDateObj.getDate());
-    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (!companyName || !jobRole || !jobType || !appliedDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields',
+        data: null
+      });
+    }
     
-    if (appliedDateOnly > nowOnly) {
+    const appDate = new Date(appliedDate);
+    const today = new Date();
+    const appDateOnly = new Date(appDate.getFullYear(), appDate.getMonth(), appDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    if (appDateOnly > todayOnly) {
       return res.status(400).json({
         success: false,
         message: 'Applied date cannot be a future date',
@@ -153,14 +139,13 @@ export const createApplication = async (req, res) => {
       });
     }
     
-    // Check for duplicate - same company and job role (case-insensitive) while earlier application is still active (not in final status)
-    const existingActiveApp = await JobApplication.findOne({
-      companyName: { $regex: new RegExp(`^${companyName.trim()}$`, 'i') },
-      jobRole: { $regex: new RegExp(`^${jobRole.trim()}$`, 'i') },
-      status: { $nin: FINAL_STATUSES }
+    const duplicate = await JobApplication.findOne({
+      companyName: { $regex: `^${companyName.trim()}$`, $options: 'i' },
+      jobRole: { $regex: `^${jobRole.trim()}$`, $options: 'i' },
+      status: { $nin: terminalStates }
     });
     
-    if (existingActiveApp) {
+    if (duplicate) {
       return res.status(409).json({
         success: false,
         message: 'An active application for this company and job role already exists',
@@ -168,44 +153,32 @@ export const createApplication = async (req, res) => {
       });
     }
     
-    // Generate application ID
-    const applicationId = await generateApplicationId(companyName);
+    const newId = await assignApplicationId(companyName);
+    const followUp = new Date(appDate);
+    followUp.setDate(followUp.getDate() + 7);
     
-    // Set follow-up date to 7 days after applied date
-    const followUpDate = new Date(appliedDateObj);
-    followUpDate.setDate(followUpDate.getDate() + 7);
-    
-    // Create status history
-    const statusHistory = [{
-      status: 'Applied',
-      dateTime: new Date()
-    }];
-    
-    const application = await JobApplication.create({
-      applicationId,
+    const created = await JobApplication.create({
+      applicationId: newId,
       companyName: companyName.trim(),
       jobRole: jobRole.trim(),
       jobType,
-      appliedDate: appliedDateObj,
-      expectedSalary: expectedSalary ? Number(expectedSalary) : undefined,
+      appliedDate: appDate,
+      expectedSalary: expectedSalary !== undefined && expectedSalary !== '' ? Number(expectedSalary) : undefined,
       notes: notes ? notes.trim() : undefined,
       status: 'Applied',
-      followUpDate,
-      statusHistory
+      followUpDate: followUp,
+      statusHistory: [{ status: 'Applied', dateTime: new Date() }]
     });
     
-    const appObj = application.toObject();
-    appObj.isOverdue = false; // Just created, not overdue
-    
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Application created successfully',
-      data: appObj
+      data: buildOverdueFlag(created)
     });
-  } catch (error) {
-    res.status(500).json({
+  } catch (err) {
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
       data: null
     });
   }
@@ -213,7 +186,7 @@ export const createApplication = async (req, res) => {
 
 export const updateStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status: nextStatus } = req.body;
     const application = await JobApplication.findById(req.params.id);
     
     if (!application) {
@@ -224,43 +197,30 @@ export const updateStatus = async (req, res) => {
       });
     }
     
-    const currentStatus = application.status;
-    const allowedNextStatuses = VALID_TRANSITIONS[currentStatus] || [];
+    const current = application.status;
+    const permitted = allowedTransitions[current] || [];
     
-    if (!allowedNextStatuses.includes(status)) {
+    if (!permitted.includes(nextStatus)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid status transition from ${currentStatus} to ${status}`,
+        message: `Invalid status transition from ${current} to ${nextStatus}`,
         data: null
       });
     }
     
-    application.status = status;
-    application.statusHistory.push({
-      status: status,
-      dateTime: new Date()
-    });
-    
+    application.status = nextStatus;
+    application.statusHistory.push({ status: nextStatus, dateTime: new Date() });
     await application.save();
     
-    const appObj = application.toObject();
-    if (application.status === 'Applied') {
-      const now = new Date();
-      const followUp = new Date(application.followUpDate);
-      appObj.isOverdue = now > followUp;
-    } else {
-      appObj.isOverdue = false;
-    }
-    
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Status updated successfully',
-      data: appObj
+      data: buildOverdueFlag(application)
     });
-  } catch (error) {
-    res.status(500).json({
+  } catch (err) {
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
       data: null
     });
   }
@@ -268,7 +228,6 @@ export const updateStatus = async (req, res) => {
 
 export const updateApplication = async (req, res) => {
   try {
-    const { companyName, jobRole, jobType, expectedSalary, notes } = req.body;
     const application = await JobApplication.findById(req.params.id);
     
     if (!application) {
@@ -279,33 +238,29 @@ export const updateApplication = async (req, res) => {
       });
     }
     
-    // Cannot edit Application ID and Applied Date
+    const { companyName, jobRole, jobType, expectedSalary, notes } = req.body;
+    
     if (companyName) application.companyName = companyName.trim();
     if (jobRole) application.jobRole = jobRole.trim();
     if (jobType) application.jobType = jobType;
-    if (expectedSalary !== undefined) application.expectedSalary = expectedSalary ? Number(expectedSalary) : undefined;
-    if (notes !== undefined) application.notes = notes ? notes.trim() : undefined;
+    if (expectedSalary !== undefined) {
+      application.expectedSalary = expectedSalary === '' ? undefined : Number(expectedSalary);
+    }
+    if (notes !== undefined) {
+      application.notes = notes === '' ? undefined : notes.trim();
+    }
     
     await application.save();
     
-    const appObj = application.toObject();
-    if (application.status === 'Applied') {
-      const now = new Date();
-      const followUp = new Date(application.followUpDate);
-      appObj.isOverdue = now > followUp;
-    } else {
-      appObj.isOverdue = false;
-    }
-    
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Application updated successfully',
-      data: appObj
+      data: buildOverdueFlag(application)
     });
-  } catch (error) {
-    res.status(500).json({
+  } catch (err) {
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
       data: null
     });
   }
@@ -323,8 +278,6 @@ export const deleteApplication = async (req, res) => {
       });
     }
     
-    // Can delete only if status is Applied or in final status
-    // Cannot delete if in Interview or Offer status
     if (application.status === 'Interview' || application.status === 'Offer') {
       return res.status(400).json({
         success: false,
@@ -335,16 +288,17 @@ export const deleteApplication = async (req, res) => {
     
     await JobApplication.findByIdAndDelete(req.params.id);
     
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Application deleted successfully',
       data: null
     });
-  } catch (error) {
-    res.status(500).json({
+  } catch (err) {
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
       data: null
     });
   }
 };
+
